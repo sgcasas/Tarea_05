@@ -2,18 +2,57 @@
 #include <vector>
 using namespace std;
 
-// Stub temporal — tú lo defines así para poder trabajar
-struct Voto {
-    std::string votanteId;
-    std::string opcion;
+// Integrante 1 : Clase Voto, y Clase Block con hash simple y funcion calcularHash
+class Voto {
+    string votanteId;
+    string opcion;
+public:
+    Voto(const string& nombreVotante, const string& opcion) {
+        size_t h = hash<string>{}(nombreVotante);
+        votanteId = to_string(h % 1000000);
+        this->opcion = opcion;
+    }
+
+    string getVotanteID() const {
+        return votanteId;
+    }
+
+    string getOpcion() const {
+        return opcion;
+    }
+
+    string toString() const {
+        return votanteId + opcion;
+    }
 };
 
 struct Block {
     int index;
-    std::string previous_hash;
-    std::vector<Voto> votos;
+    string previous_hash;
+    vector<Voto> votos;
     int nonce;
-    std::string current_hash;
+    string current_hash;
+public:
+    Block(int index,
+          const string& previous_hash,
+          const vector<Voto>& votos): index(index),
+          previous_hash(previous_hash),
+          votos(votos),
+          nonce(0) {
+        current_hash = calcularHash();
+    }
+    string calcularHash(){
+        string datos;
+        datos += to_string(index);
+        datos += previous_hash;
+        datos += to_string(nonce);
+        for (const auto& voto : votos) {
+            datos += voto.toString();
+        }
+        size_t hashValue = hash<string>{}(datos);
+
+        return to_string(hashValue);
+}
 };
 
 //integrante 2: Blockhain, mineBlock(int dificultad), isChainValid()
