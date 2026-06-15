@@ -33,9 +33,15 @@ public:
         }
         return true;
     }
+
+    void agregarBloque(Block* bloque) {
+        chain.push_back(bloque);
+    }
+
     void mineBlock(int dificultad, Block* block) {
         int nonce = 0;
-        while (calcularHash(block) != string(dificultad, '0')) {
+        while (calcularHash(block).substr(0, dificultad) != string(dificultad, '0')) {
+
             nonce++;
             block->nonce = nonce;
         }
