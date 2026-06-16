@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 using namespace std;
 
 // Integrante 1 : Clase Voto, y Clase Block con hash simple y funcion calcularHash
@@ -33,6 +35,7 @@ struct Block {
     int nonce;
     string current_hash;
 public:
+    Block() {}
     Block(int index,
           const string& previous_hash,
           const vector<Voto>& votos): index(index),
@@ -51,23 +54,22 @@ public:
         }
         size_t hashValue = hash<string>{}(datos);
 
-        return to_string(hashValue);
+        stringstream ss;
+        ss << setw(16) << setfill('0') << hex << hashValue;
+        return ss.str();
 }
 };
 
 //integrante 2: Blockhain, mineBlock(int dificultad), isChainValid()
 
-//hasta que el integrante 1 escoja hash:
-string calcularHash(Block* block) {}
-
 class Blockchain {
     vector<Block*> chain;
     static Blockchain* instance;
-    Blockchain() {}
 public:
+    Blockchain() {}
     bool isChainValid() {
         for (int i = 1; i < chain.size(); i++) {
-            if (chain[i]->current_hash != calcularHash(chain[i])) { return false; }
+            if (chain[i]->current_hash != chain[i]->calcularHash()) { return false; }
             if (chain[i-1]->current_hash != chain[i]->previous_hash) { return false; }
         }
         return true;
@@ -79,12 +81,12 @@ public:
 
     void mineBlock(int dificultad, Block* block) {
         int nonce = 0;
-        while (calcularHash(block).substr(0, dificultad) != string(dificultad, '0')) {
+        while (block->calcularHash().substr(0, dificultad) != string(dificultad, '0')) {
 
             nonce++;
             block->nonce = nonce;
         }
-        block->current_hash = calcularHash(block);
+        block->current_hash = block->calcularHash();
     }
     static Blockchain* getInstance() {
         if (instance == nullptr) { instance = new Blockchain(); }
@@ -105,10 +107,10 @@ class MesaElectoral : public MesaElectoralObserver {
     Blockchain* blockchain;
 public:
     MesaElectoral(string nombre)
-        : nombre(nombre), blockchain(Blockchain::getInstance()) {}
+        : nombre(nombre), blockchain(new Blockchain()) {}
 
     void update(Block nuevoBloque) override {
-        if (calcularHash(&nuevoBloque) == nuevoBloque.current_hash) {
+        if (nuevoBloque.calcularHash() == nuevoBloque.current_hash) {
             blockchain->agregarBloque(new Block(nuevoBloque));
             cout << "[" << nombre << "] Bloque Num. " << nuevoBloque.index
                  << " ACEPTADO | Hash: " << nuevoBloque.current_hash << "\n";
@@ -166,6 +168,8 @@ int main() {
     mesa1.mostrarEstado();
     mesa2.mostrarEstado();
     mesa3.mostrarEstado();
-
+    // Cada MesaElectoral simula un nodo independiente (en la realidad seria un proceso aparte
+    // con su propio Singleton de Blockchain). Como la demo corre las 3 mesas en un solo main,
+    // cada una mantiene su propia cadena para reflejar ese aislamiento entre nodos.
     return 0;
 }
